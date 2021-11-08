@@ -1,5 +1,5 @@
-# Dato un numero capire se e' divisibile per 4 senza fare la divisione
-# restituire in t1 0 se divisibile, 1 se non lo e'
+# Dato un numero, capire se e' divisibile per 4 senza fare la divisione.
+# Restituire 0 in $t1 se divisibile, 1 se non lo e'.
 
 .text
 	li	$t0, 18 			# se metto 32 e' divisibile => t1 = 0

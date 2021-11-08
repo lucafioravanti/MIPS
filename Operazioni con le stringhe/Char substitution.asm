@@ -1,5 +1,6 @@
-# Data una parola, carico un carattere da cercare in s0
-# e lo sostituisco con un altro carattere caricato in s1
+# Data una parola, carico un carattere da cercare in $s0
+# e lo sostituisco con un altro carattere caricato in $Ss1
+
 .data
 	parola:	.space 100
 	
@@ -35,7 +36,7 @@
 		j loop
 		
 	cambiaCar:
-		# devo cambiarlo alla posizione indirizzo + var_iterazione
+		# devo cambiarlo alla posizione (indirizzo) + var_iterazione
 		sb $s1, ($t0)
 		
 		addiu $t0, $t0, 1	# punto al prossimo

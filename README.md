@@ -1,1 +1,1 @@
-Esercizi e prove con il linguaggio assembly-MIPS.
+Esercizi di Assembly - MIPS, svolti in preparazione dell'esame pratico di Calcolatori Elettronici durante il corso di Laurea in Ingegneria Elettronica e Informatica presso l'Università di Pavia.
