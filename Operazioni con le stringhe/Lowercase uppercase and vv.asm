@@ -1,5 +1,7 @@
-# andi: m -> M e resta maiuscola se lo e' gia
-# ori $t1, $t1, 0x20		 M -> m
+# Uso 'andi' per portare da minuscolo a MAIUSCOLO e resta maiuscola se lo e' gia
+# 'ori' fa l'operazione inversa: ori $t1, $t1, 0x20
+
+# utilizzo direttiva .data per simulare spazio in RAM/ROM per il salvataggio della parola.		 
 
 .data 0x10010000
 	nome:	.space 20		# 20 bytes

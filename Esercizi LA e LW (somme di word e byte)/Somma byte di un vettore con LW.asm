@@ -2,6 +2,7 @@
 	vettore: 
 		.byte 5, 4, 100, 3	
 	fine_dati:
+	
 .text 	
 	la $t8, vettore		# USATA PER LA CONDIZIONE DI FINE AREA DATI (FINE VETTORE, SENZA LUNGHEZZA ESPLICITA)
 	

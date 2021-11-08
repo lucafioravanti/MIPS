@@ -1,5 +1,7 @@
+# definisco un'area dati
+# con 'n' word (c0, c1, ... cn)
+# i quali indacano i vari nomi dei casi (c0 = case 0, ...)
 .data
-	# definisco un'area dati con 'n' word con i nomi dei casi.
 	tab_ind:	.word c0, c1
 	
 .text	
@@ -11,6 +13,7 @@
 	lw $t2, ($t0)		# legge a che indirizzo andare 
 	jr $t2				# raggiungo tale indirizzo
  
+# loop infinito solo per scopo di test
 c0:	nop
 	j c0
 	

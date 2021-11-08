@@ -25,7 +25,9 @@ ciclo:
 	j ciclo
 
 end:
-	# --- Andando in virgola mobile: 
+	# Utilizzando i registri in virgola mobile,
+	# una possibile soluzione e' la seguente:
+	#
 	# mtc1 $s2, $f0			# sum in f0
 	# mtc1 $t0, $f1			# i in f1
 	#
@@ -37,14 +39,16 @@ end:
 	# round.w.s $f5, $f0		# rounding...
 	# cvt.s.w $f5, $f5
 	
-	# --- sfrutto la matematica:
+	# Sfruttando la matematica:
+	#
 	#	resto/divisore > 0.5
-	#	2*resto > divisore
+	#	2 * resto > divisore
 	#
-	# moltiplico per 2 il resto -> tramite sll
-	# e lo paragono alla "i" che e'¨il divisore -> tramite slt e bnq
+	# Tramite SLL moltiplico per 2 il resto
+	# e tramite SLT e BNE, lo paragono alla variabile "i" ciclo
+	# che è anche il che e'¨il divisore.
 	#
-	# se e'¨ maggiore, arrotondo per eccesso
+	# Se e' maggiore, arrotondo per eccesso
 	# altrimenti lascio cosi
 	
 	divu $s2, $s2, $t0

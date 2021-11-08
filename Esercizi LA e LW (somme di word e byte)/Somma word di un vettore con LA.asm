@@ -1,5 +1,4 @@
 # Sommare i numeri di un vettore
-# (anche sommare solo posizioni pari/dispari)
 
 .data 0x10010402
 	vettore:		.word 1, 1000, -100, 400, -1000		
