@@ -1,0 +1,180 @@
+----------------------------
+ Game table structure
+----------------------------
+
+	---1---2---3-
+	1--X-|-O-|-X-|
+	2--O-|-X-|-O-|
+	3--X-|-O-|-X-|
+	
+	where "-" is a space.
+	
+	MIPS-Ready serialized:	---1---2---3-\n1--X-|-O-|-X-|\n2--O-|-X-|-O-|\n3--X-|-O-|-X-|\n
+	Empty: 					   1   2   3 \n1    |   |   |\n2    |   |   |\n3    |   |   |\n
+	
+	with border:	
+	
+	   1   2   3 \n 
+	1  X | O | X \n
+	__---+---+---\n
+	2  O | X | O \n
+	__---+---+---\n
+	3  X | O | X \n
+	
+	where "_" (underscore) is a space.
+	
+	MIPS-Ready serialized:	"   1   2   3 \n1  X | O | X \n  ---+---+---\n2  O | X | O \n  ---+---+---\n3  X | O | X \n"
+	
+	
+	With this game table structure, valid move are: 
+	11 12 13 21 22 23 31 32 33
+	
+	If an illegal move is played (e.g. 41), an error message is printed
+	and another chance is given.
+
+
+	
+----------------------------
+ Registers
+----------------------------
+
+	Registers "$t" are used as game table cells:
+	
+			 1 | 2 | 3 
+			---+---+---
+			 4 | 5 | 6 
+			---+---+---
+			 7 | 8 | 9 
+	
+	$t0 : used to establish a possible victory (see "Checking victory")
+	
+	$t1 : 0|1 (refers to cell 11)	0 -> empty cell		1 -> X signed cell		4 -> O signed cell
+	$t2 : 0|1 (refers to cell 12)			"					"						 "
+	$t3 : 0|1 (refers to cell 13)			"					"						 "
+	$t4 : 0|1 (refers to cell 21)			"					"						 "
+	$t5 : 0|1 (refers to cell 22)			"					"						 "
+	$t6 : 0|1 (refers to cell 23)			"					"						 "
+	$t7 : 0|1 (refers to cell 31)			"					"						 "
+	$t8 : 0|1 (refers to cell 32)			"					"						 "
+	$t9 : 0|1 (refers to cell 33)			"					"						 "
+	
+	Those registers identify a cell in the game table.
+	E.g:
+		$t1 = 0 means that the cell 11 is empty;  
+		$t1 = 1 the cell 11 contains the sign X, otherwise
+		$t1 = 4 the cell contains the sign O.
+		
+		Why '4' instead of '2' for the 'O' sign?
+		To solve a problem related the verification of the victory (sum check. See "Checking victory")
+	
+	$s0 : current selected cell (eg. 11 if user select the cell 11 as "rowColumn")
+	$s1 : game table address
+	$s2 : char X (as load byte)
+	$s3 : char O (as load byte)
+	$s4 : universal counter. With each move, I increase the counter in order to check the
+		  tie case at the end of the game.
+	$s5 : identify the player. 1: player X ; O: player O.
+	
+
+	
+----------------------------
+ Code structure (commented)
+----------------------------
+
+	# Loading things :
+	I load the string that makes up the game table
+	then, via "load byte" I trasfer the chars from the memory to a register.
+	
+	# Print gametable
+	Prints the empty game table.
+	
+	# player x's first move
+	(since I have decided that player X starts)
+	
+	play_X:
+	through $s5 I identify the player:
+	
+		$s5 = 1 -> player X
+		$s5 = 0 -> player O
+	
+	Then, I load the code to read the chosen cell as 'rowCol' combined number.
+	So, jump to 'read'.
+	
+	# Reading the move
+	and move it to the registry $s0.
+	
+	beq instructions 
+	are used to compare and understand in which case I am.
+	If it is none of those, prints an error due invalid move and gives another chance.
+	
+	### Commenting the behavior of a single, general cell "xy" ###
+	
+	cell_xy:
+	
+	 First check:
+	 beqz $s5, O11 : through $s5 I identify the player. If $s5 register contains zero,
+					 is playing the player_O so I go to the label Oxy.
+	
+	 Second Check:
+	 bnez $tn, play_X : if the cell is not-empty 
+						(that's means that the t-register associated does not contains ZERO)
+						re-do the move. This check does not print a custom message, no 
+						particular warning has been created	but it is not even printed the
+						board game.			
+	  	
+	Now, whether it is O or X that moves, those are the instructions:
+		
+		sb $s2, *($s1)
+		li $t1, 1
+	
+	where, '*' is the length at which insert the symbol, based on the string gametable
+	whose address has been loaded into the register $s1. The first register, in the
+	example $s2, is the symbol to be stored, $s2 = X. $s1 = O in that particular position (*)
+	of the gametable string.
+	
+	Therefore the turn is complete, jump to checkVictory
+	
+	* Note *
+	* I could manage the game with a single block, without dividing between 
+	* "player X" and "player O". Aware of this, I prefer to keep the code 
+	* more readable in this way.	
+	 
+
+
+----------------------------
+ Checking victory
+----------------------------
+
+	t-registers associated with cells:
+	
+			 1 | 2 | 3 
+			---+---+---
+			 4 | 5 | 6 
+			---+---+---
+			 7 | 8 | 9 
+
+	if I occupy the cell with X, the t-register corresponding to the cell = 1
+	if I occupy the cell with O, the t-register corresponding to the cell = 4
+	
+	'4' to have no-conflicts during the checking victory procedure:  
+	having 3 cells, 1 + 1 + 1 = 3 	< 	4
+	
+	checkVictory X:
+	WON if the sum of a row,
+					  a column,
+				   or a diagonal
+	is 3
+	
+	checkVictory O:
+	WON if the sum of a row,
+					  a column,
+				   or a diagonal
+	is 12
+	
+	$t0 is used to calculate the sum
+	
+	To check the tie situation, 
+	it is used the register $s0 as a universal move counter.
+	
+	On the ninth move, if there are no winners, it's a tie.
+	

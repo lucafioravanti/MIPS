@@ -1,0 +1,73 @@
+###########################################################
+#														  #	
+#	Copyright (C) Luca Fioravanti - All Rights Reserved	  #
+# 	Unauthorized copying of this file, via any medium	  #
+# 	is strictly prohibited proprietary and confidential.  #
+#														  #
+###########################################################
+
+Bitmap display
+	
+	each rectangular unit on the display (aka pixel if 1x1) represents one memory
+	word in a contiguous address space starting with the specified base address.
+	
+	The value stored in that word will be interpreted as a 24-bit RGB color
+	value with:
+	
+		R -> bits 16 - 23
+		G -> bits 8 - 15
+		B -> bits 0 - 7
+		
+	---
+	
+	Drawing the game table
+		1 pixel = 1 word = 4 bytes
+	
+		bitmap settings:
+			Unit width in pixels:		1
+			Unit height in pixels:		1
+			Display width in pixels:	256
+			Display height in pixels:	256
+			Base address for display:	0x10010000 (static data)
+			
+		t0: base address (0x10010000)
+		
+		horizontal lines
+			Margin-left:
+				The display has a length of 256 pixels. Wanting to center 
+				the game table, I draw a line of 200 pixels with
+				margin-left, margin-right of 28 pixels.
+				
+				28 * 1 word = 28 * 4 bytes = 112
+			
+			Margin-top:
+				256 pixel * 1 word = 1024 (that's a line length)
+				
+				I want three group of cell (123 // 456 // 789)
+				To do this, 256/3 = 85.3 ab. => 84 to respect the consistency of the addresses
+			
+				multiplying the two values I find the desired position: 1024 * 84
+				
+				
+				The second horizontal line is the same but with a doubled disance: 84*2= 168
+				
+				
+		vertical lines
+			restoring base address: 0x10010000
+			margin-top: 1024 * 10
+			margin-left: 84 * 1 word = 84 * 4 = 336
+			The value is 84 as above to recreate a square shape
+			
+			In the loop, the "print command" is the same but this time
+			I add 1024 bcs the line is vertical and I have to draw straight down 
+			line per line time by time.
+		
+				
+			
+		
+	---
+	
+	Registers
+		s1: hexadecimal color coding
+	
+	

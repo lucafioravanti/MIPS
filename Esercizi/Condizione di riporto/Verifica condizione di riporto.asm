@@ -1,8 +1,11 @@
+# Il programma verifica la condizione di riporto
+# Nei registri $t1 e $t2 vengono inseriti due numeri di prova
+
 .text:
 	li $t1, 0x00000000
 	li $t2, 0xf0000100
 	
-	# per capire quanto manca faccio il complementare con nor e zero:
+	# per capire quanto manca, faccio il complementare tramite NOR e zero:
 	# t3 = 2^(32) - 1 -t1
 	
 	nor $t3, $t1, $0

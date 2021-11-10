@@ -1,0 +1,79 @@
+Domande esame orale e soluzione
+
+-> non stampare anche il NEEDLE
+=> vai + "needle_len" avanti
+#####################################
+sotto la riga 57 (savingOutpuString: la, addu, QUI) metti:
+
+    la $a0, needle
+    jal strlen
+    move $s7, $v0
+    addu $s1, $s1, $s7
+	
+#####################################
+
+
+
+-> lunghezza output
+=> metti un altro contatore
+   sfruttando la funzione già presente
+#####################################
+sotto la riga 72 (prima di # terminate) metti:
+
+    (la $a0, output)
+    jal strlen
+    move $s7, $v0
+	
+#####################################
+
+
+
+
+-> stampa la parte che elimini
+=> devo stampare haystack fino a matchPosition
+############
+cancella tutto dentro savingOutpuString:, che diventa:
+
+la $s1, haystack
+	#  $s0 = match position
+	la $s2, output
+	savingLoop:
+		lbu $t0, ($s1)
+		sb $t0,($s2)
+		addiu $s1, $s1, 1	# avanzo haystack
+		addiu $s2, $s2, 1	# avanzo dove scrivere
+		addiu $s0, $s0, -1	# abbasso il match position
+		beqz $s0, exit
+		j savingLoop
+############
+
+
+
+
+
+-> fallo case IN-sensitive
+=> forza needle e haystack in minuscolo con l'ORI
+############
+dopo il codice "# asking and retrieving the input"
+
+la $a0, haystack		
+    jal strmin
+    
+    la $a0, needle		
+    jal strmin
+
+e poi sotto, alla fine di tutto:
+
+strmin:
+	loop_min:
+		lbu $t1, 0($a0)				# recupero il singolo carattere
+		beq $t1, 0xA, end_min		# se il carattere e' \n => FINE senza cambiarlo...
+		ori $t1, $t1, 0x20			# forzo a minuscolo
+		sb $t1, ($a0)				# salvo
+		addiu $a0, $a0, 1			# punto il prossimo carattere
+		j loop_min
+	
+	end_min:
+		jr $ra
+
+############

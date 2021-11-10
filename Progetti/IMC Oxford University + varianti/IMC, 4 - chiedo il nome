@@ -1,0 +1,246 @@
+# Programma per il calcolo dell'indice di massa corporea (IMC)
+# basato sul più recente algoritmo sviluppato da ricercatori della Oxford University.
+#
+# IMC = ( 1.3 * peso[kg] / altezza[m]^(2.5) ) 
+#
+# https://people.maths.ox.ac.uk/trefethen/bmi.html
+##
+
+
+### IMC personalizzato: chiedo e stampo nome
+
+.data	
+	k:					.float	1.3		#costante moltiplicativa
+	limite_inferiore:	.float	18.5		#se IMC < 18.5 => sottopeso 
+	limite_superiore:	.float	25.0		#se IMC > 25	 => sovrappeso 
+	
+	s_peso:				.asciiz	"Inserisci il peso [kg]: "		
+	s_altezza:			.asciiz	"Inserisci l'altezza [m]: "		
+	s_ris1:				.asciiz	", sulla base del nuovo indice IMC, il tuo punteggio e': "
+	s_ris2:				.asciiz	"\novvero viene considerato come "
+
+	s_sottopeso:			.asciiz "sottopeso.\n"
+	s_sovrappeso:		.asciiz "sovrappeso.\n"
+	s_pesoOk	:			.asciiz "in salute.\n"
+	
+	s_nome:				.asciiz "Inserisci il tuo nome: \n"
+	nome:				.space 20		#20 bytes -> 18 char + invio + end
+	
+	newline: 			.asciiz "\n"		#per formattazione
+	
+.text 
+.globl main
+
+main:
+
+#stampo la stringa che chiede di inserire il nome
+la $a0, s_nome
+li $v0, 4
+syscall
+
+#recupero l'input e lo salvo
+li $v0, 8 
+la $a0, nome 		#carico lo spazio in byte nell'indirizzo
+li $a1, 20			#string
+move $t5,$a0 		#salvo in t5 (t0 gia usato)
+syscall
+
+#rimuovo il "newline" dall'input
+li $t5 -1
+ciclo:	
+addi $t5 $t5 1
+lb $t6 nome($t5)
+bne $t6 0xA ciclo
+sb $zero nome($t5)
+
+## stampo la stringa "inserisci peso:"
+li	$v0, 4			#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+la 	$a0, s_peso		#carico l'indirizzo della stringa che deve essere stampata in $a0
+syscall				#eseguo l'operazione
+
+## leggo il peso
+li $v0, 5			#carico in $v0 il codice syscall per la lettura di un intero (codice 5)
+syscall				
+
+# sposto l'input letto in un registro più appropriato
+move $s0, $v0		#$s0 = peso
+
+## provo a stampare il peso letto : OK
+#li $v0, 1			#carico in $v0 il codice della syscall per la stampa di un intero (codice 1)
+#move $a0, $s0		#passo alla syscall il numero da stampare
+#syscall
+
+
+## stampo la stringa "inserisci altezza:"
+li	$v0, 4			#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+la	$a0, s_altezza	#carico l'indirizzo della stringa che deve essere stampata in $a0
+syscall				
+
+## leggo l'altezza
+li $v0, 6			#carico in $v0 il codice syscall per la lettura di un intero (codice 5)
+syscall				
+
+# sposto l'input letto in un registro più appropriato
+mov.s $f10, $f0	 	#$f10 = altezza (syscall restituisce in $f0)
+
+## provo a stampare l'altezza letta : OK
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa (2 per float)
+#mov.s $f12, $f10	#carico alla syscall il numero da stampare
+#syscall	
+
+
+##............................................................................................................Inizio calcolo IMC
+#Primo step: calcolo k * peso
+l.s $f1, k			#carico la costante in un registro in virgola mobile
+
+## provo a stampare la costante (float) : OK
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f1 	#passo alla syscall il numero da stampare
+#syscall
+
+#Devo svolgere una moltiplicazione tra un float e un int => porto in float il peso(int)
+mtc1 $s0, $f2		#sposto il registro in uno a virgola mobile
+cvt.s.w $f2, $f2 	#converto il valore del peso $f1 da int a float
+
+mul.s $f3,$f1,$f2	#svolgo la moltiplicazione
+
+## provo a stampare il risultato della moltiplicazion (float) : OK 
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f3	 	#passo alla syscall il numero da stampare
+#syscall				
+
+
+## Secondo step: calcolo h^(esp)
+## siccome esp = 2.5 = 5/2
+## spezzo l'operazione in sqrt(h^5)
+	
+mov.s $f4, $f10	 	# copio il valore dell'altezza: $f4 = altezza = $f10. mi serve per la moltiplicazione
+
+##Prova stampa $f4:  deve contenere altezza: OK
+##Prova stampa $f10: deve contenere altezza: OK
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f10	#passo alla syscall il numero da stampare
+#syscall
+
+
+#Eseguo h^5 come moltiplicazione di h 5 volte con se stessa
+
+#ciclo FOR
+	#
+	#for(i = 0; i < 4; ++i) {
+	#	//stuff
+	#}
+
+	#li $t0, 0					# condizione iniziale ciclo: t0 = i = 0
+	#for_loop:					# etichetta ciclo
+	#slti $t1, $t0, 4			# t1 = 1 if and only if t0 < 4
+	#beq $t1, $0, for_loop_done	# condizione per fine ciclo
+	#
+	# stuff						# istruzioni dentro al ciclo
+	#
+	#addi $t0, $t0, 1			# incremento
+	#j for_loop					# salto per successivo giro
+	#
+	#for_loop_done:
+
+li $t0, 0						#condizione iniziale ciclo: t0 = i = 0
+
+for_loop:						#etichetta ciclo
+	slti $t1, $t0, 4				#t1 = 1 if and only if t0 < 4
+	beq $t1, $0, for_loop_done	#condizione per fine ciclo
+
+	mul.s $f4,$f4,$f10			#istruzioni dentro al ciclo: $f4 = $f4*h 
+
+	addi $t0, $t0, 1				#incremento
+	j for_loop					#salto per successivo giro
+
+
+for_loop_done:
+## provo a stampare $f4. Dovrebbe contenere h^5 : OK 
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f4		#passo alla syscall il numero da stampare
+#syscall
+
+sqrt.s $f5, $f4		#$f5 = sqrt($f4). Denominatore concluso
+
+## provo a stampare $f5 : OK
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f5		#passo alla syscall il numero da stampare
+#syscall
+
+div.s $f6,$f3,$f5	#$f6 = IMC = numeratore/denominatore = $f3/$f5
+
+## provo a stampare $f6 : OK
+#li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+#mov.s $f12, $f6		#passo alla syscall il numero da stampare
+#syscall
+
+##.............................................................................................................Fine conto IMC
+
+## stampo le stringhe generiche per il risultato numerico:
+
+
+
+#per la formattazione, stampo un newline (\n)
+li $v0, 4      	 
+la $a0, newline  
+syscall
+
+#stampo la stringa del nome
+la $a0, nome 	#ricarico lo spazio in byte in $a0 
+li $v0,4			
+syscall
+
+
+#stampo la stringa s_ris1
+li	$v0, 4			#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+la 	$a0, s_ris1		#carico l'indirizzo della stringa che deve essere stampata in $a0
+syscall				
+
+#stampo l'indice IMC
+li $v0, 2			#carico in $v0 il codice della syscall per la stampa di un float (codice 2)
+mov.s $f12, $f6		#passo alla syscall il numero da stampare
+syscall
+
+#stampo la stringa s_ris2
+li	$v0, 4			#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+la 	$a0, s_ris2		#carico l'indirizzo della stringa che deve essere stampata in $a0
+syscall				
+
+
+#carico le due costanti di confronto
+l.s $f7, limite_inferiore			#carico la costante in un registro in virgola mobile
+l.s $f8, limite_superiore			#carico la costante in un registro in virgola mobile
+
+
+## primo confronto. se positivo salto a sottopeso
+c.le.s $f6, $f7 						#confronto ed eventualmente salto
+bc1t sottopeso 						#salta se $f6 <= $f7 cioè se IMC <= 18.5
+
+## secondo confronto. se positivo salto a sovrappeso
+c.le.s $f6, $f8 						#confronto ed eventualmente salto
+bc1f sovrappeso 						#salta se $f6 <= $f8 è falso cioè se IMC >= 25.0
+
+## altrimenti: stampo la stringa s_pesoOk
+li	$v0, 4							#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+la 	$a0, s_pesoOk					#carico l'indirizzo della stringa che deve essere stampata in $a0
+syscall		
+j exit
+
+
+sottopeso:
+	## stampo la stringa
+	li	$v0, 4						#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+	la 	$a0, s_sottopeso				#carico l'indirizzo della stringa che deve essere stampata in $a0
+	syscall
+	j exit
+
+sovrappeso:
+	## stampo la stringa 
+	li	$v0, 4						#carico il codice per scrivere una stringa della syscall nel registro $v0 (codice 4)	
+	la 	$a0, s_sovrappeso			#carico l'indirizzo della stringa che deve essere stampata in $a0
+	syscall	
+	j exit
+
+
+exit:
